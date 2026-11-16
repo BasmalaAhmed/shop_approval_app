@@ -1,23 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_status_chip.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
 
 class ApprovalRequestCard extends StatelessWidget {
   const ApprovalRequestCard({super.key, required this.request});
 
   final ApprovalRequest request;
-
-  String _statusLabel(ApprovalStatus status) {
-    switch (status) {
-      case ApprovalStatus.pending:
-        return 'في انتظار الموافقة';
-      case ApprovalStatus.approved:
-        return 'تمت الموافقة';
-      case ApprovalStatus.rejected:
-        return 'مرفوض';
-      case ApprovalStatus.draft:
-        return 'مسودة';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +30,7 @@ class ApprovalRequestCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text("السبب: ${request.reason}"),
             const SizedBox(height: 12),
-            Chip(label: Text(_statusLabel(request.status))),
+            ApprovalStatusChip(status: request.status),
           ],
         ),
       ),
