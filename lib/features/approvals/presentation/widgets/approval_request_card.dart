@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_detail_row.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_status_chip.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
 
@@ -21,14 +22,17 @@ class ApprovalRequestCard extends StatelessWidget {
           children: [
             Text(
               request.employeeName,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w600
+              ),
             ),
-            const SizedBox(height: 8),
-            Text("الفرع: ${request.branchName}"),
-            const SizedBox(height: 8),
-            Text('المبلغ: $pounds.${piastres.toString().padLeft(2, '0')} جنيه'),
-            const SizedBox(height: 8),
-            Text("السبب: ${request.reason}"),
+            ApprovalDetailRow(label: 'الفرع', value: request.branchName),
+            ApprovalDetailRow(
+              label: 'المبلغ',
+              value: '$pounds.${piastres.toString().padLeft(2, '0')} جنيه',
+            ),
+            ApprovalDetailRow(label: 'السبب', value: request.reason),
             const SizedBox(height: 12),
             ApprovalStatusChip(status: request.status),
           ],
