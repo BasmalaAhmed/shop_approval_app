@@ -1,0 +1,1 @@
+enum ApprovalDecision { reject, approve }
