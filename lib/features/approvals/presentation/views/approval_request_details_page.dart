@@ -72,6 +72,12 @@ class ApprovalRequestDetailsPage extends StatelessWidget {
                       status: request.status,
                       lastDecision: request.lastDecision,
                     ),
+                    if (request.status == ApprovalStatus.approved &&
+                        request.executedAsEmployee != null)
+                      ApprovalDetailRow(
+                        label: 'نُفذت العملية باسم',
+                        value: request.executedAsEmployee!,
+                      ),
                     const SizedBox(height: 20),
                     if (operation is DecisionSubmitting ||
                         operation is DecisionCheckingOutcome) ...[

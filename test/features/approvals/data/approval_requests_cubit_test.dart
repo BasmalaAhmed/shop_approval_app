@@ -66,6 +66,10 @@ void main() {
     expect(confirmedSuccess.updatedRequest.version, 2);
     expect(successAfterCheck.requests.single.status, ApprovalStatus.approved);
     expect(successAfterCheck.requests.single.version, 2);
+    expect(
+      successAfterCheck.requests.single.executedAsEmployee,
+      request.employeeName,
+    );
   });
 
   test('retries unknown decision with the same decision ID', () async {

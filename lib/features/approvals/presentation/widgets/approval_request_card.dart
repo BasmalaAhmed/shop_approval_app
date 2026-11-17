@@ -36,8 +36,8 @@ class ApprovalRequestCard extends StatelessWidget {
       operationMessage = 'تم تحديث الطلب من جهاز آخر';
       operationColor = Colors.orange;
     } else if (operation is DecisionFailure) {
-      final failure  = operation as DecisionFailure;
-      operationMessage = failure .message;
+      final failure = operation as DecisionFailure;
+      operationMessage = failure.message;
       operationColor = Colors.red;
     }
 
@@ -69,6 +69,12 @@ class ApprovalRequestCard extends StatelessWidget {
               status: request.status,
               lastDecision: request.lastDecision,
             ),
+            if (request.status == ApprovalStatus.approved &&
+                request.executedAsEmployee != null)
+              ApprovalDetailRow(
+                label: 'نُفذت باسم',
+                value: request.executedAsEmployee!,
+              ),
             const SizedBox(height: 12),
             if (operationMessage != null) ...[
               const SizedBox(height: 8),

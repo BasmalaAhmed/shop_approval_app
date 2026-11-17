@@ -79,6 +79,9 @@ class MockApprovalApi implements ApprovalApi {
             ? ApprovalStatus.approved
             : ApprovalStatus.draft,
         lastDecision: command.decision,
+        executedAsEmployee: command.decision == ApprovalDecision.approve
+            ? currentRequest.employeeName
+            : null,
       );
 
       _requests[command.requestId] = updatedRequest;

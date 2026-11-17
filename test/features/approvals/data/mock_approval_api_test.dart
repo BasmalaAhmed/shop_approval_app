@@ -136,4 +136,39 @@ void main() {
     expect(decisionResult, isNull);
     expect(result.lastDecision, isNull);
   });
+
+  test(
+    'rejection returns request to draft without execution employee',
+    () async {
+      final request = ApprovalRequest(
+        requestId: 1,
+        employeeName: 'أحمد محمود',
+        branchName: 'مدينة نصر',
+        amountInPiastres: 156123,
+        reason: 'شراء مستلزمات للمحل',
+        version: 1,
+        status: ApprovalStatus.pending,
+      );
+
+      final api = MockApprovalApi(
+        initialRequests: [request],
+        responseDelay: Duration.zero,
+      );
+
+      final result = await api.submitDecision(
+        ApprovalDecisionCommand(
+          requestId: request.requestId,
+          decisionId: 'reject-test-1',
+          expectedVersion: request.version,
+          decision: ApprovalDecision.reject,
+        ),
+      );
+
+      expect(result.outcome, ApprovalDecisionOutcome.applied);
+      expect(result.request.status, ApprovalStatus.draft);
+      expect(result.request.lastDecision, ApprovalDecision.reject);
+      expect(result.request.version, 2);
+      expect(result.request.executedAsEmployee, isNull);
+    },
+  );
 }
