@@ -22,10 +22,7 @@ class ApprovalRequestCard extends StatelessWidget {
           children: [
             Text(
               request.employeeName,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
             ),
             ApprovalDetailRow(label: 'الفرع', value: request.branchName),
             ApprovalDetailRow(
@@ -33,8 +30,17 @@ class ApprovalRequestCard extends StatelessWidget {
               value: '$pounds.${piastres.toString().padLeft(2, '0')} جنيه',
             ),
             ApprovalDetailRow(label: 'السبب', value: request.reason),
+            if (request.attentionMessage != null)
+              ApprovalDetailRow(
+                label: 'ملاحظة',
+                value: request.attentionMessage!,
+                noteColor: Colors.red,
+              ),
             const SizedBox(height: 12),
-            ApprovalStatusChip(status: request.status),
+            ApprovalStatusChip(
+              status: request.status,
+              lastDecision: request.lastDecision,
+            ),
           ],
         ),
       ),

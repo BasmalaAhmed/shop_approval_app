@@ -11,6 +11,7 @@ class ApprovalRequest {
   final int version;
   final ApprovalStatus status;
   final ApprovalDecision? lastDecision;
+  final String? attentionMessage;
 
   ApprovalRequest({
     required this.requestId,
@@ -21,12 +22,14 @@ class ApprovalRequest {
     required this.version,
     required this.status,
     this.lastDecision,
+    this.attentionMessage,
   });
 
   ApprovalRequest copyWith({
     int? version,
     ApprovalStatus? status,
     ApprovalDecision? lastDecision,
+    String? attentionMessage,
   }) {
     return ApprovalRequest(
       requestId: requestId,
@@ -37,6 +40,7 @@ class ApprovalRequest {
       version: version ?? this.version,
       status: status ?? this.status,
       lastDecision: lastDecision ?? this.lastDecision,
+      attentionMessage: attentionMessage ?? this.attentionMessage,
     );
   }
 }

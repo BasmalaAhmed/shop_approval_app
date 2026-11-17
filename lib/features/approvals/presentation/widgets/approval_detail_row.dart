@@ -5,9 +5,11 @@ class ApprovalDetailRow extends StatelessWidget {
     super.key,
     required this.label,
     required this.value,
+    this.noteColor,
   });
 
   final String label, value;
+  final Color? noteColor;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +22,11 @@ class ApprovalDetailRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: noteColor ?? Colors.black,
+              ),
             ),
           ),
         ],
