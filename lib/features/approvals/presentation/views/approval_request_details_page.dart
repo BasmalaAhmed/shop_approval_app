@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_cubit.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
+import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_button.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_detail_row.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_status_chip.dart';
+import 'package:shop_approval_app/models/approval_decision.dart';
+import 'package:shop_approval_app/models/approval_request.dart';
 
 class ApprovalRequestDetailsPage extends StatelessWidget {
   const ApprovalRequestDetailsPage({super.key, required this.requestId});
@@ -13,7 +16,7 @@ class ApprovalRequestDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('تفاصيل الطلب')),
+      appBar: AppBar(title: const Text('تفاصيل الطلب')),
       body: BlocBuilder<ApprovalRequestsCubit, ApprovalRequestsState>(
         builder: (context, state) {
           if (state is ApprovalRequestsFailure) {
@@ -29,6 +32,7 @@ class ApprovalRequestDetailsPage extends StatelessWidget {
             }
 
             final request = matchingRequests.first;
+            final operation = state.operationFor(requestId);
             final pounds = request.amountInPiastres ~/ 100;
             final piastres = request.amountInPiastres % 100;
 
@@ -57,10 +61,83 @@ class ApprovalRequestDetailsPage extends StatelessWidget {
                     const SizedBox(height: 12),
                     ApprovalDetailRow(label: 'السبب', value: request.reason),
                     const SizedBox(height: 12),
+                    if (request.attentionMessage != null)
+                      ApprovalDetailRow(
+                        label: 'تنبيه',
+                        value: request.attentionMessage!,
+                        noteColor: Colors.red,
+                      ),
+                    const SizedBox(height: 12),
                     ApprovalStatusChip(
                       status: request.status,
                       lastDecision: request.lastDecision,
                     ),
+                    const SizedBox(height: 20),
+                    if (operation is DecisionSubmitting ||
+                        operation is DecisionCheckingOutcome) ...[
+                      const Center(child: CircularProgressIndicator()),
+                      const SizedBox(height: 8),
+                      const Text('جار متابعة القرار...'),
+                    ] else if (operation is DecisionUnknownOutcome) ...[
+                      Text(
+                        operation.message ?? 'نتيجة القرار غير مؤكدة',
+                        style: const TextStyle(color: Colors.orange),
+                      ),
+                      const SizedBox(height: 8),
+                      ApprovalButton(
+                        label: 'تحقق من النتيجة',
+                        onTap: () {
+                          context
+                              .read<ApprovalRequestsCubit>()
+                              .checkDecisionOutcome(requestId);
+                        },
+                      ),
+                      ApprovalButton(
+                        label: 'أعد إرسال نفس القرار',
+                        onTap: () {
+                          context
+                              .read<ApprovalRequestsCubit>()
+                              .retryUnknownDecision(requestId);
+                        },
+                      ),
+                    ] else ...[
+                      if (operation is DecisionConflict)
+                        const Text(
+                          'تغيّرت بيانات الطلب من جهاز آخر. راجعي البيانات قبل قرار جديد.',
+                          style: TextStyle(color: Colors.orange),
+                        ),
+                      if (operation is DecisionFailure)
+                        Text(
+                          operation.message,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      if (request.status == ApprovalStatus.pending) ...[
+                        const SizedBox(height: 8),
+                        ApprovalButton(
+                          label: 'موافقة',
+                          onTap: () {
+                            context
+                                .read<ApprovalRequestsCubit>()
+                                .submitDecision(
+                                  requestId,
+                                  ApprovalDecision.approve,
+                                );
+                          },
+                        ),
+                        ApprovalButton(
+                          label: 'رفض',
+                          buttonColor: Colors.red,
+                          onTap: () {
+                            context
+                                .read<ApprovalRequestsCubit>()
+                                .submitDecision(
+                                  requestId,
+                                  ApprovalDecision.reject,
+                                );
+                          },
+                        ),
+                      ],
+                    ],
                   ],
                 ),
               ),

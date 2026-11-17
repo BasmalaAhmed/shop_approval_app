@@ -1,17 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_detail_row.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_status_chip.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
 
 class ApprovalRequestCard extends StatelessWidget {
-  const ApprovalRequestCard({super.key, required this.request});
+  const ApprovalRequestCard({
+    super.key,
+    required this.request,
+    required this.operation,
+  });
 
   final ApprovalRequest request;
+  final DecisionOperationState operation;
 
   @override
   Widget build(BuildContext context) {
     final pounds = request.amountInPiastres ~/ 100;
     final piastres = request.amountInPiastres % 100;
+
+    String? operationMessage;
+    Color? operationColor;
+
+    if (operation is DecisionSubmitting) {
+      operationMessage = 'جارٍ إرسال القرار...';
+      operationColor = Colors.blue;
+    } else if (operation is DecisionCheckingOutcome) {
+      operationMessage = 'جارٍ التحقق من النتيجة...';
+      operationColor = Colors.blue;
+    } else if (operation is DecisionUnknownOutcome) {
+      final unknown = operation as DecisionUnknownOutcome;
+      operationMessage = unknown.message ?? 'نتيجة القرار غير مؤكدة';
+      operationColor = Colors.orange;
+    } else if (operation is DecisionConflict) {
+      operationMessage = 'تم تحديث الطلب من جهاز آخر';
+      operationColor = Colors.orange;
+    } else if (operation is DecisionFailure) {
+      final failure  = operation as DecisionFailure;
+      operationMessage = failure .message;
+      operationColor = Colors.red;
+    }
 
     return Card(
       child: Padding(
@@ -32,7 +60,7 @@ class ApprovalRequestCard extends StatelessWidget {
             ApprovalDetailRow(label: 'السبب', value: request.reason),
             if (request.attentionMessage != null)
               ApprovalDetailRow(
-                label: 'ملاحظة',
+                label: 'تنبيه',
                 value: request.attentionMessage!,
                 noteColor: Colors.red,
               ),
@@ -41,6 +69,12 @@ class ApprovalRequestCard extends StatelessWidget {
               status: request.status,
               lastDecision: request.lastDecision,
             ),
+            const SizedBox(height: 12),
+            if (operationMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(operationMessage, style: TextStyle(color: operationColor)),
+            ],
+            const SizedBox(height: 12),
           ],
         ),
       ),

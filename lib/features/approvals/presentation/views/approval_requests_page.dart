@@ -3,15 +3,28 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_cubit.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
 import 'package:shop_approval_app/features/approvals/presentation/views/approval_request_details_page.dart';
+import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_button.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_request_card.dart';
 
-class ApprovalRequestsPage extends StatelessWidget {
+class ApprovalRequestsPage extends StatefulWidget {
   const ApprovalRequestsPage({super.key});
+
+  @override
+  State<ApprovalRequestsPage> createState() => _ApprovalRequestsPageState();
+}
+
+class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    context.read<ApprovalRequestsCubit>().loadRequests();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('طلبات الموافقة')),
+      appBar: AppBar(title: const Text('طلبات الموافقة')),
       body: BlocBuilder<ApprovalRequestsCubit, ApprovalRequestsState>(
         builder: (context, state) {
           if (state is ApprovalRequestsInitial ||
@@ -20,7 +33,21 @@ class ApprovalRequestsPage extends StatelessWidget {
           }
 
           if (state is ApprovalRequestsFailure) {
-            return Center(child: Text(state.message));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(state.message),
+                  const SizedBox(height: 12),
+                  ApprovalButton(
+                    label: 'إعادة المحاولة',
+                    onTap: () {
+                      context.read<ApprovalRequestsCubit>().loadRequests();
+                    },
+                  ),
+                ],
+              ),
+            );
           }
 
           if (state is ApprovalRequestsSuccess) {
@@ -40,12 +67,16 @@ class ApprovalRequestsPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (context) =>
-                            ApprovalRequestDetailsPage(requestId: request.requestId),
+                        builder: (context) => ApprovalRequestDetailsPage(
+                          requestId: request.requestId,
+                        ),
                       ),
                     );
                   },
-                  child: ApprovalRequestCard(request: request),
+                  child: ApprovalRequestCard(
+                    request: request,
+                    operation: state.operationFor(request.requestId),
+                  ),
                 );
               },
               separatorBuilder: (context, index) {
