@@ -16,7 +16,11 @@ class ApprovalRequestDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('تفاصيل الطلب')),
+      backgroundColor: Color(0XFFF1F0EA),
+      appBar: AppBar(
+        title: const Text('تفاصيل الطلب'),
+        backgroundColor: Color(0XFFF1F0EA),
+      ),
       body: BlocBuilder<ApprovalRequestsCubit, ApprovalRequestsState>(
         builder: (context, state) {
           if (state is ApprovalRequestsFailure) {

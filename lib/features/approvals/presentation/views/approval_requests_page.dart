@@ -24,7 +24,11 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('طلبات الموافقة')),
+      backgroundColor: Color(0XFFF1F0EA),
+      appBar: AppBar(
+        title: const Text('طلبات الموافقة'),
+        backgroundColor: Color(0XFFF1F0EA),
+      ),
       body: BlocBuilder<ApprovalRequestsCubit, ApprovalRequestsState>(
         builder: (context, state) {
           if (state is ApprovalRequestsInitial ||

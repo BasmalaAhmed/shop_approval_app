@@ -42,6 +42,7 @@ class ApprovalRequestCard extends StatelessWidget {
     }
 
     return Card(
+      color: Color(0XFFEAEFD3),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

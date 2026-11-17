@@ -22,10 +22,6 @@ class ShopApprovalApp extends StatelessWidget {
         locale: const Locale('ar'),
         supportedLocales: const [Locale('ar')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        theme: ThemeData(
-          colorScheme: .fromSeed(seedColor: Colors.teal),
-          useMaterial3: true,
-        ),
         home: const ApprovalRequestsPage(),
       ),
     );
