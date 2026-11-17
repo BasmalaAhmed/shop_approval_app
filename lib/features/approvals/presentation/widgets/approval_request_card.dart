@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_detail_row.dart';
+import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_notice.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_status_chip.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
 
@@ -19,26 +20,29 @@ class ApprovalRequestCard extends StatelessWidget {
     final pounds = request.amountInPiastres ~/ 100;
     final piastres = request.amountInPiastres % 100;
 
-    String? operationMessage;
-    Color? operationColor;
+    Widget? operationStatus;
 
     if (operation is DecisionSubmitting) {
-      operationMessage = 'جارٍ إرسال القرار...';
-      operationColor = Colors.blue;
+      operationStatus = const Text('جارٍ إرسال القرار...');
     } else if (operation is DecisionCheckingOutcome) {
-      operationMessage = 'جارٍ التحقق من النتيجة...';
-      operationColor = Colors.blue;
+      operationStatus = const Text('جارٍ التحقق من النتيجة...');
     } else if (operation is DecisionUnknownOutcome) {
       final unknown = operation as DecisionUnknownOutcome;
-      operationMessage = unknown.message ?? 'نتيجة القرار غير مؤكدة';
-      operationColor = Colors.orange;
+      operationStatus = ApprovalNotice(
+        title: 'النتيجة غير مؤكدة',
+        message: unknown.message ?? 'تعذر تأكيد نتيجة القرار.',
+      );
     } else if (operation is DecisionConflict) {
-      operationMessage = 'تم تحديث الطلب من جهاز آخر';
-      operationColor = Colors.orange;
+      operationStatus = const ApprovalNotice(
+        title: 'تم تحديث الطلب',
+        message: 'تغيّرت بيانات الطلب من جهاز آخر. يرجى مراجعة البيانات.',
+      );
     } else if (operation is DecisionFailure) {
       final failure = operation as DecisionFailure;
-      operationMessage = failure.message;
-      operationColor = Colors.red;
+      operationStatus = ApprovalNotice(
+        title: 'تعذر تنفيذ القرار',
+        message: failure.message,
+      );
     }
 
     return Card(
@@ -59,11 +63,10 @@ class ApprovalRequestCard extends StatelessWidget {
               value: '$pounds.${piastres.toString().padLeft(2, '0')} جنيه',
             ),
             ApprovalDetailRow(label: 'السبب', value: request.reason),
-            if (request.attentionMessage != null)
-              ApprovalDetailRow(
-                label: 'تنبيه',
-                value: request.attentionMessage!,
-                noteColor: Colors.red,
+            if (request.attentionMessage?.trim().isNotEmpty == true)
+              ApprovalNotice(
+                title: 'تنبيه',
+                message: request.attentionMessage!,
               ),
             const SizedBox(height: 12),
             ApprovalStatusChip(
@@ -77,9 +80,9 @@ class ApprovalRequestCard extends StatelessWidget {
                 value: request.executedAsEmployee!,
               ),
             const SizedBox(height: 12),
-            if (operationMessage != null) ...[
+            if (operationStatus != null) ...[
               const SizedBox(height: 8),
-              Text(operationMessage, style: TextStyle(color: operationColor)),
+              operationStatus,
             ],
             const SizedBox(height: 12),
           ],

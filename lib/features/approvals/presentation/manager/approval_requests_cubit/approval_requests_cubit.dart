@@ -196,10 +196,13 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
             ),
           );
       }
-    } on Exception catch (error) {
+    } on Exception {
       _setDecisionOperation(
         requestId,
-        DecisionUnknownOutcome(command, message: error.toString()),
+        DecisionUnknownOutcome(
+          command,
+          message: _unknownOutcomeMessage(command.decision),
+        ),
       );
     }
   }
@@ -262,10 +265,13 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
             ),
           );
       }
-    } on Exception catch (error) {
+    } on Exception {
       _setDecisionOperation(
         requestId,
-        DecisionUnknownOutcome(command, message: error.toString()),
+        DecisionUnknownOutcome(
+          command,
+          message: _unknownOutcomeMessage(command.decision),
+        ),
       );
     }
   }
@@ -317,11 +323,22 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
             ),
           );
       }
-    } on Exception catch (error) {
+    } on Exception {
       _setDecisionOperation(
         requestId,
-        DecisionUnknownOutcome(command, message: error.toString()),
+        DecisionUnknownOutcome(
+          command,
+          message: _unknownOutcomeMessage(command.decision),
+        ),
       );
     }
+  }
+
+  String _unknownOutcomeMessage(ApprovalDecision decision) {
+    final decisionName = decision == ApprovalDecision.approve
+        ? 'الموافقة'
+        : 'الرفض';
+
+    return 'تعذر تأكيد نتيجة $decisionName. يرجى التحقق من النتيجة قبل اتخاذ قرار جديد.';
   }
 }

@@ -4,6 +4,7 @@ import 'package:shop_approval_app/features/approvals/presentation/manager/approv
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_button.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_detail_row.dart';
+import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_notice.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/approval_status_chip.dart';
 import 'package:shop_approval_app/models/approval_decision.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
@@ -24,7 +25,15 @@ class ApprovalRequestDetailsPage extends StatelessWidget {
       body: BlocBuilder<ApprovalRequestsCubit, ApprovalRequestsState>(
         builder: (context, state) {
           if (state is ApprovalRequestsFailure) {
-            return Center(child: Text(state.message));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ApprovalNotice(
+                  title: 'تعذر تحميل الطلبات',
+                  message: state.message,
+                ),
+              ),
+            );
           }
           if (state is ApprovalRequestsSuccess) {
             final matchingRequests = state.requests.where(
@@ -65,11 +74,10 @@ class ApprovalRequestDetailsPage extends StatelessWidget {
                     const SizedBox(height: 12),
                     ApprovalDetailRow(label: 'السبب', value: request.reason),
                     const SizedBox(height: 12),
-                    if (request.attentionMessage != null)
-                      ApprovalDetailRow(
-                        label: 'تنبيه',
-                        value: request.attentionMessage!,
-                        noteColor: Colors.red,
+                    if (request.attentionMessage?.trim().isNotEmpty == true)
+                      ApprovalNotice(
+                        title: 'تنبيه',
+                        message: request.attentionMessage!,
                       ),
                     const SizedBox(height: 12),
                     ApprovalStatusChip(
@@ -89,9 +97,10 @@ class ApprovalRequestDetailsPage extends StatelessWidget {
                       const SizedBox(height: 8),
                       const Text('جار متابعة القرار...'),
                     ] else if (operation is DecisionUnknownOutcome) ...[
-                      Text(
-                        operation.message ?? 'نتيجة القرار غير مؤكدة',
-                        style: const TextStyle(color: Colors.orange),
+                      ApprovalNotice(
+                        title: 'النتيجة غير مؤكدة',
+                        message:
+                            operation.message ?? 'تعذر تأكيد نتيجة القرار.',
                       ),
                       const SizedBox(height: 8),
                       ApprovalButton(
@@ -112,14 +121,16 @@ class ApprovalRequestDetailsPage extends StatelessWidget {
                       ),
                     ] else ...[
                       if (operation is DecisionConflict)
-                        const Text(
-                          'تغيّرت بيانات الطلب من جهاز آخر. راجعي البيانات قبل قرار جديد.',
-                          style: TextStyle(color: Colors.orange),
+                        const ApprovalNotice(
+                          title: 'تم تحديث الطلب',
+                          message:
+                              'تغيّرت بيانات الطلب من جهاز آخر. يرجى مراجعة البيانات.',
                         ),
+
                       if (operation is DecisionFailure)
-                        Text(
-                          operation.message,
-                          style: const TextStyle(color: Colors.red),
+                        ApprovalNotice(
+                          title: 'تعذر تنفيذ القرار',
+                          message: operation.message,
                         ),
                       if (request.status == ApprovalStatus.pending) ...[
                         const SizedBox(height: 8),
