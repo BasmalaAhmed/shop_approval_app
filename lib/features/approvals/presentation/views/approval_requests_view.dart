@@ -24,13 +24,15 @@ class _ApprovalRequestsViewState extends State<ApprovalRequestsView> {
   int _selectedTabIndex = _pendingTab;
 
   void _openDetails(int requestId) {
-    context.read<ApprovalRequestsCubit>().refreshRequests();
+    final cubit = context.read<ApprovalRequestsCubit>();
+    cubit.startViewing(requestId);
     Navigator.push(
       context,
-      MaterialPageRoute<void>(
-        builder: (_) => ApprovalRequestDetailsView(requestId: requestId),
+      MaterialPageRoute(
+        builder: (_) =>
+            ApprovalRequestDetailsView(requestId: requestId),
       ),
-    );
+    ).then((_) => cubit.stopViewing());
   }
 
   String _pendingSubtitle(int count) {

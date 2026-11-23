@@ -27,6 +27,28 @@ class _NotFoundApi implements ApprovalApi {
   }
 }
 
+class _ScriptedApi implements ApprovalApi {
+  List<ApprovalRequest> next = [];
+  int fetchCount = 0;
+
+  @override
+  Future<List<ApprovalRequest>> fetchRequests() async {
+    fetchCount++;
+    return next;
+  }
+
+  @override
+  Future<ApprovalDecisionResult?> findDecisionById(String decisionId) async =>
+      null;
+
+  @override
+  Future<ApprovalDecisionResult> submitDecision(
+    ApprovalDecisionCommand command,
+  ) async {
+    throw UnimplementedError();
+  }
+}
+
 void main() {
   test('retrieves approve result after response lost', () async {
     final request = buildRequest();
@@ -270,4 +292,124 @@ void main() {
       expect(state.operationFor(1), isA<DecisionFailure>());
     },
   );
+
+  group('refreshRequests', () {
+    test('picks up changes made elsewhere while the request is open', () async {
+      final api = _ScriptedApi()..next = [buildRequest()];
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => true);
+      addTearDown(cubit.close);
+      await cubit.loadRequests();
+
+      api.next = [buildRequest(version: 2, amountInPiastres: 999900)];
+      await cubit.refreshRequests();
+
+      final request = (cubit.state as ApprovalRequestsSuccess).requests.single;
+      expect(request.version, 2);
+      expect(request.amountInPiastres, 999900);
+    });
+
+    test('ignores a stale response with an older version', () async {
+      final api = _ScriptedApi()..next = [buildRequest(version: 2)];
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => true);
+      addTearDown(cubit.close);
+      await cubit.loadRequests();
+
+      api.next = [buildRequest(version: 1)];
+      await cubit.refreshRequests();
+
+      final request = (cubit.state as ApprovalRequestsSuccess).requests.single;
+      expect(request.version, 2);
+    });
+
+    test('does not call the api while offline', () async {
+      final api = _ScriptedApi()..next = [buildRequest()];
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => false);
+      addTearDown(cubit.close);
+      await cubit.loadRequests();
+
+      await cubit.refreshRequests();
+
+      expect(api.fetchCount, 1);
+    });
+  });
+
+  group('changes while a request is open', () {
+    test('flags a change that happens while viewing', () async {
+      final api = _ScriptedApi()
+        ..next = [buildRequest(amountInPiastres: 125500)];
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => true);
+      addTearDown(cubit.close);
+      await cubit.loadRequests();
+      cubit.startViewing(1);
+      await Future<void>.delayed(Duration.zero);
+
+      api.next = [buildRequest(version: 2, amountInPiastres: 134000)];
+      await cubit.refreshRequests();
+
+      final state = cubit.state as ApprovalRequestsSuccess;
+      final operation = state.operationFor(1) as DecisionRequestChanged;
+      expect(operation.change.previous.amountInPiastres, 125500);
+      expect(operation.change.latest.amountInPiastres, 134000);
+    });
+
+    test('does not flag a change on a request nobody is viewing', () async {
+      final api = _ScriptedApi()..next = [buildRequest()];
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => true);
+      addTearDown(cubit.close);
+      await cubit.loadRequests();
+
+      api.next = [buildRequest(version: 2, amountInPiastres: 999900)];
+      await cubit.refreshRequests();
+
+      final state = cubit.state as ApprovalRequestsSuccess;
+      expect(state.operationFor(1), isA<DecisionIdle>());
+    });
+
+    test('blocks decisions until the change is acknowledged', () async {
+      final api = MockApprovalApi(
+        initialRequests: [buildRequest()],
+        responseDelay: Duration.zero,
+        now: () => fixedNow,
+      );
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => true);
+      addTearDown(cubit.close);
+      await cubit.loadRequests();
+      cubit.startViewing(1);
+      await Future<void>.delayed(Duration.zero);
+
+      api.simulateExternalChange(1, amountInPiastres: 999900);
+      await cubit.refreshRequests();
+      await cubit.submitDecision(1, ApprovalDecision.approve);
+
+      var state = cubit.state as ApprovalRequestsSuccess;
+      expect(state.requests.single.status, ApprovalStatus.pending);
+      expect(state.operationFor(1), isA<DecisionRequestChanged>());
+
+      cubit.acknowledgeChange(1);
+      await cubit.submitDecision(1, ApprovalDecision.approve);
+
+      state = cubit.state as ApprovalRequestsSuccess;
+      expect(state.requests.single.status, ApprovalStatus.approved);
+      expect(state.requests.single.version, 3);
+    });
+
+    test('a conflict on a still-pending request asks for review', () async {
+      final api = MockApprovalApi(
+        initialRequests: [buildRequest()],
+        responseDelay: Duration.zero,
+      );
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => true);
+      addTearDown(cubit.close);
+      await cubit.loadRequests();
+
+      api.simulateExternalChange(1, amountInPiastres: 999900);
+      await cubit.submitDecision(1, ApprovalDecision.approve);
+
+      final state = cubit.state as ApprovalRequestsSuccess;
+      final operation = state.operationFor(1) as DecisionRequestChanged;
+      expect(operation.change.previous.amountInPiastres, 156123);
+      expect(state.requests.single.amountInPiastres, 999900);
+      expect(state.requests.single.status, ApprovalStatus.pending);
+    });
+  });
 }

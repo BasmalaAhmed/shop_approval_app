@@ -1,5 +1,6 @@
 import 'package:shop_approval_app/models/approval_decision_command.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
+import 'package:shop_approval_app/models/request_change.dart';
 
 sealed class ApprovalRequestsState {
   const ApprovalRequestsState();
@@ -84,4 +85,9 @@ final class DecisionConflict extends DecisionOperationState {
 final class DecisionFailure extends DecisionOperationState {
   final String message;
   const DecisionFailure(this.message);
+}
+
+final class DecisionRequestChanged extends DecisionOperationState {
+  final RequestChange change;
+  const DecisionRequestChanged(this.change);
 }

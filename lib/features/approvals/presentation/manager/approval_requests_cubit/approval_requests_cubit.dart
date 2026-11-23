@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ import 'package:shop_approval_app/models/approval_decision.dart';
 import 'package:shop_approval_app/models/approval_decision_command.dart';
 import 'package:shop_approval_app/models/approval_decision_result.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
+import 'package:shop_approval_app/models/request_change.dart';
 
 class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
   final ApprovalApi api;
@@ -28,6 +30,31 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
     final bytes = List<int>.generate(16, (_) => random.nextInt(256));
 
     return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  int? _viewingRequestId;
+
+  void startViewing(int requestId) {
+    _viewingRequestId = requestId;
+
+    final currentState = state;
+    if (currentState is ApprovalRequestsSuccess &&
+        currentState.operationFor(requestId) is DecisionRequestChanged) {
+      _setDecisionOperation(requestId, const DecisionIdle());
+    }
+
+    unawaited(refreshRequests());
+  }
+
+  void stopViewing() => _viewingRequestId = null;
+
+  void acknowledgeChange(int requestId) {
+    final currentState = state;
+    if (currentState is! ApprovalRequestsSuccess ||
+        currentState.operationFor(requestId) is! DecisionRequestChanged) {
+      return;
+    }
+    _setDecisionOperation(requestId, const DecisionIdle());
   }
 
   Future<void> loadRequests() async {
@@ -86,23 +113,68 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
         for (final request in currentState.requests) request.requestId: request,
       };
 
-      final merged = fetched
-          .map((remote) {
-            final local = localById[remote.requestId];
+      final operations = Map<int, DecisionOperationState>.from(
+        currentState.decisionOperations,
+      );
 
-            return local != null && local.version > remote.version
-                ? local
-                : remote;
-          })
-          .toList(growable: false);
+      final merged = <ApprovalRequest>[];
+
+      for (final remote in fetched) {
+        final local = localById[remote.requestId];
+
+        if (local == null) {
+          merged.add(remote);
+        } else if (local.version > remote.version) {
+          merged.add(local);
+        } else {
+          if (remote.version > local.version) {
+            _flagChangeIfViewing(operations, local, remote);
+          }
+          merged.add(remote);
+        }
+      }
 
       emit(
         currentState.copyWith(
           requests: List<ApprovalRequest>.unmodifiable(merged),
+          decisionOperations: Map<int, DecisionOperationState>.unmodifiable(
+            operations,
+          ),
         ),
       );
     } on Exception {
       return;
+    }
+  }
+
+  void _flagChangeIfViewing(
+    Map<int, DecisionOperationState> operations,
+    ApprovalRequest local,
+    ApprovalRequest remote,
+  ) {
+    if (remote.requestId != _viewingRequestId ||
+        local.status != ApprovalStatus.pending ||
+        remote.status != ApprovalStatus.pending) {
+      return;
+    }
+
+    final operation = operations[remote.requestId];
+
+    if (operation != null &&
+        operation is! DecisionRequestChanged &&
+        operation is! DecisionFailure) {
+      return;
+    }
+
+    final previous = operation is DecisionRequestChanged
+        ? operation.change.previous
+        : local;
+    final change = RequestChange(previous: previous, latest: remote);
+
+    if (change.hasVisibleChanges) {
+      operations[remote.requestId] = DecisionRequestChanged(change);
+    } else {
+      operations.remove(remote.requestId);
     }
   }
 
@@ -195,7 +267,8 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
 
     if (operation is DecisionSubmitting ||
         operation is DecisionCheckingOutcome ||
-        operation is DecisionUnknownOutcome) {
+        operation is DecisionUnknownOutcome ||
+        operation is DecisionRequestChanged) {
       return;
     }
 
@@ -227,13 +300,7 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
           );
 
         case ApprovalDecisionOutcome.versionConflict:
-          _setRequestAndDecisionOperation(
-            result.request,
-            DecisionConflict(
-              attemptedCommand: command,
-              latestRequest: result.request,
-            ),
-          );
+          _handleConflict(command, result, request);
       }
     } on ApprovalRequestNotFoundException {
       _setDecisionOperation(
@@ -306,13 +373,7 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
           );
 
         case ApprovalDecisionOutcome.versionConflict:
-          _setRequestAndDecisionOperation(
-            result.request,
-            DecisionConflict(
-              attemptedCommand: command,
-              latestRequest: result.request,
-            ),
-          );
+          _handleConflict(command, result, _findRequest(requestId));
       }
     } on Exception {
       _setDecisionOperation(
@@ -364,13 +425,7 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
           );
 
         case ApprovalDecisionOutcome.versionConflict:
-          _setRequestAndDecisionOperation(
-            result.request,
-            DecisionConflict(
-              attemptedCommand: command,
-              latestRequest: result.request,
-            ),
-          );
+          _handleConflict(command, result, _findRequest(requestId));
       }
     } on ApprovalRequestNotFoundException {
       _setDecisionOperation(
@@ -399,5 +454,37 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
         : 'الرفض';
 
     return 'تعذر تأكيد نتيجة $decisionName. يرجى التحقق من النتيجة قبل اتخاذ قرار جديد.';
+  }
+
+  ApprovalRequest? _findRequest(int requestId) {
+    final currentState = state;
+    if (currentState is! ApprovalRequestsSuccess) return null;
+
+    return currentState.requests
+        .where((request) => request.requestId == requestId)
+        .firstOrNull;
+  }
+
+  void _handleConflict(
+    ApprovalDecisionCommand command,
+    ApprovalDecisionResult result,
+    ApprovalRequest? seenRequest,
+  ) {
+    final latest = result.request;
+
+    if (latest.status == ApprovalStatus.pending && seenRequest != null) {
+      _setRequestAndDecisionOperation(
+        latest,
+        DecisionRequestChanged(
+          RequestChange(previous: seenRequest, latest: latest),
+        ),
+      );
+      return;
+    }
+
+    _setRequestAndDecisionOperation(
+      latest,
+      DecisionConflict(attemptedCommand: command, latestRequest: latest),
+    );
   }
 }

@@ -122,6 +122,7 @@ class RequestUpdatedBanner extends StatelessWidget {
       icon: Icons.sync_rounded,
       title: 'الطلب تغيّر أثناء عرضه',
       message: message,
+      footer: 'عدّل أحمد محمود المبلغ. راجع البيانات الجديدة قبل القرار.',
     );
   }
 }
