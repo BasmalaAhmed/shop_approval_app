@@ -33,6 +33,7 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
   }
 
   int? _viewingRequestId;
+  int? get viewingRequestId => _viewingRequestId;
 
   void startViewing(int requestId) {
     _viewingRequestId = requestId;

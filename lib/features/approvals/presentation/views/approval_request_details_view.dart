@@ -36,7 +36,10 @@ class ApprovalRequestDetailsView extends StatelessWidget {
                       const OfflineBanner(),
                       const SizedBox(height: 12),
                     ],
-                    DetailsAppBar(request: request),
+                    DetailsAppBar(
+                      request: request,
+                      isNewVersion: operation is DecisionRequestChanged,
+                    ),
                     Expanded(
                       child: RequestDetailsContent(
                         request: request,

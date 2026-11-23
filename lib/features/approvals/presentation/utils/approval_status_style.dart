@@ -46,13 +46,6 @@ class ApprovalStatusStyle {
     icon: Icons.access_time_rounded,
   );
 
-  static const _updated = ApprovalStatusStyle(
-    label: 'تم تحديث الطلب',
-    background: AppColors.updatedNoticeBg,
-    foreground: AppColors.updatedNoticeText,
-    icon: Icons.sync_rounded,
-  );
-
   static const _approved = ApprovalStatusStyle(
     label: 'تمت الموافقة',
     background: AppColors.approvedBg,
@@ -95,9 +88,6 @@ class ApprovalStatusStyle {
 
     switch (request.status) {
       case ApprovalStatus.pending:
-        if (operation is DecisionConflict) {
-          return _updated;
-        }
         return request.hasAttention ? _needsAttention : _pending;
       case ApprovalStatus.approved:
         return _approved;

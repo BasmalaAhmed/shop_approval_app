@@ -29,8 +29,6 @@ class DetailsBottomBar extends StatefulWidget {
 }
 
 class _DetailsBottomBarState extends State<DetailsBottomBar> {
-  int? _reviewedVersion;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -108,24 +106,19 @@ class _DetailsBottomBarState extends State<DetailsBottomBar> {
       );
     }
 
-    final needsReview =
-        operation is DecisionConflict &&
-        request.isPending &&
-        _reviewedVersion != request.version;
-
-    if (needsReview) {
+    if (operation is DecisionRequestChanged) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           OutlineButton.neutral(
             label: 'راجعتُ التعديل',
             icon: Icons.check_rounded,
-            onPressed: () => setState(() => _reviewedVersion = request.version),
+            onPressed: () => cubit.acknowledgeChange(request.requestId),
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: CustomButton(label: 'موافقة', onTap: null)),
+              Expanded(child: CustomButton(label: 'موافق', onTap: null)),
               const SizedBox(width: 12),
               Expanded(child: OutlineButton.reject(onPressed: null)),
             ],
@@ -133,6 +126,7 @@ class _DetailsBottomBarState extends State<DetailsBottomBar> {
         ],
       );
     }
+
     final isOnline = context.watch<ConnectivityCubit>().state;
     return Column(
       mainAxisSize: MainAxisSize.min,

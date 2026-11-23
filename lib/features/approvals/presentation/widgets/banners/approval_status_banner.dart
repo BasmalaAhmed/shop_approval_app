@@ -3,6 +3,7 @@ import 'package:shop_approval_app/core/app_colors.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
 import 'package:shop_approval_app/features/approvals/presentation/utils/approval_request_presentation.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/banners/info_banner.dart';
+import 'package:shop_approval_app/features/approvals/presentation/widgets/banners/request_changed_banner.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/banners/tinted_banner.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/banners/warning_banner.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
@@ -47,13 +48,13 @@ class ApprovalStatusBanner extends StatelessWidget {
       );
     }
 
+    if (operation is DecisionRequestChanged) {
+      return RequestChangedBanner(
+        change: (operation as DecisionRequestChanged).change,
+      );
+    }
+
     if (operation is DecisionConflict) {
-      if (request.isPending) {
-        return const RequestUpdatedBanner(
-          message:
-              'تغيّرت بيانات الطلب من جهاز آخر. راجع البيانات الجديدة قبل القرار.',
-        );
-      }
       return const InfoBanner(
         icon: Icons.tablet_mac_rounded,
         title: 'اتُّخِذ القرار من جهاز آخر',

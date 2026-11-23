@@ -3,9 +3,10 @@ import 'package:shop_approval_app/core/app_styles.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
 
 class DetailsAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const DetailsAppBar({super.key, this.request});
+  const DetailsAppBar({super.key, this.request, this.isNewVersion = false});
 
   final ApprovalRequest? request;
+  final bool isNewVersion;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -24,7 +25,7 @@ class DetailsAppBar extends StatelessWidget implements PreferredSizeWidget {
           if (request != null) ...[
             const SizedBox(height: 2),
             Text(
-              'نسخة ${request!.version} · طلب رقم ${request!.requestId}',
+              'نسخة ${request!.version}${isNewVersion ? ' (جديدة)' : ''} · طلب رقم ${request!.requestId}',
               style: AppStyles.appBarSubtitle,
             ),
           ],

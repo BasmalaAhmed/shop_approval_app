@@ -108,21 +108,3 @@ class UnconfirmedOutcomeBanner extends StatelessWidget {
   }
 }
 
-class RequestUpdatedBanner extends StatelessWidget {
-  const RequestUpdatedBanner({super.key, required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return TintedBanner(
-      background: AppColors.updatedNoticeBg,
-      border: AppColors.updatedNoticeBorder,
-      accent: AppColors.updatedNoticeText,
-      icon: Icons.sync_rounded,
-      title: 'الطلب تغيّر أثناء عرضه',
-      message: message,
-      footer: 'عدّل أحمد محمود المبلغ. راجع البيانات الجديدة قبل القرار.',
-    );
-  }
-}

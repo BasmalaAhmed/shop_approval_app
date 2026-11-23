@@ -20,7 +20,7 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEnabled = !isLoading;
+    final isEnabled = !isLoading && onTap != null;
     final background = isEnabled
         ? (bgColor ?? AppColors.primaryTeal)
         : AppColors.buttonDisabled;

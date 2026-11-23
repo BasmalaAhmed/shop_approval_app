@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,6 +12,8 @@ import 'package:shop_approval_app/features/approvals/data/mock_api_scenario.dart
 import 'package:shop_approval_app/features/approvals/data/mock_approval_api.dart';
 import 'package:shop_approval_app/features/approvals/data/mock_approval_data.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_cubit.dart';
+import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
+import 'package:shop_approval_app/features/approvals/presentation/utils/approval_request_presentation.dart';
 import 'package:shop_approval_app/features/approvals/presentation/views/approval_requests_view.dart';
 
 class ShopApprovalApp extends StatefulWidget {
@@ -51,11 +54,7 @@ class _ShopApprovalAppState extends State<ShopApprovalApp> {
 
     if (_simulateExternalChange) {
       _demoTimer = Timer(const Duration(seconds: 10), () {
-        _api.simulateExternalChange(
-          4,
-          amountInPiastres: 999900,
-          attentionMessage: 'تم تعديل المبلغ من جهاز آخر',
-        );
+        _api.simulateExternalChange(4, amountInPiastres: 999900);
       });
     }
   }
@@ -88,6 +87,67 @@ class _ShopApprovalAppState extends State<ShopApprovalApp> {
         supportedLocales: const [Locale('ar')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         home: const AutoRefresh(child: ApprovalRequestsView()),
+        builder: (context, child) => Stack(
+          fit: StackFit.expand,
+          children: [
+            child!,
+            if (kDebugMode)
+              Positioned(
+                top: 0,
+                left: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: _DebugPanel(api: _api),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DebugPanel extends StatelessWidget {
+  const _DebugPanel({required this.api});
+
+  final MockApprovalApi api;
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<ApprovalRequestsCubit>();
+
+    return Material(
+      color: const Color(0xA6000000),
+      borderRadius: BorderRadius.circular(20),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.bolt_rounded, color: Colors.white),
+            onPressed: () {
+              final state = cubit.state;
+              if (state is! ApprovalRequestsSuccess) return;
+
+              final id = cubit.viewingRequestId ?? 4;
+              final request = state.requests
+                  .where((item) => item.requestId == id)
+                  .firstOrNull;
+
+              if (request == null || !request.isPending) return;
+
+              api.simulateExternalChange(
+                id,
+                amountInPiastres: request.amountInPiastres + 50000,
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            onPressed: cubit.refreshRequests,
+          ),
+        ],
       ),
     );
   }
