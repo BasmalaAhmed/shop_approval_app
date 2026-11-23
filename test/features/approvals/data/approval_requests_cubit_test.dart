@@ -1,12 +1,31 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shop_approval_app/features/approvals/data/approval_api.dart';
+import 'package:shop_approval_app/features/approvals/data/approval_api_exception.dart';
 import 'package:shop_approval_app/features/approvals/data/mock_api_scenario.dart';
 import 'package:shop_approval_app/features/approvals/data/mock_approval_api.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_cubit.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
 import 'package:shop_approval_app/models/approval_decision.dart';
 import 'package:shop_approval_app/models/approval_decision_command.dart';
+import 'package:shop_approval_app/models/approval_decision_result.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
 import '../../../helpers/approval_test_data.dart';
+
+class _NotFoundApi implements ApprovalApi {
+  @override
+  Future<List<ApprovalRequest>> fetchRequests() async => [buildRequest()];
+
+  @override
+  Future<ApprovalDecisionResult?> findDecisionById(String decisionId) async =>
+      null;
+
+  @override
+  Future<ApprovalDecisionResult> submitDecision(
+    ApprovalDecisionCommand command,
+  ) async {
+    throw ApprovalRequestNotFoundException(command.requestId);
+  }
+}
 
 void main() {
   test('retrieves approve result after response lost', () async {
@@ -233,4 +252,22 @@ void main() {
     expect(finalState.requests.single.status, ApprovalStatus.approved);
     expect(finalState.requests.single.version, 2);
   });
+
+  test(
+    'definite server rejection becomes a failure, not a stuck state',
+    () async {
+      final cubit = ApprovalRequestsCubit(
+        _NotFoundApi(),
+        isOnline: () => true,
+        createDecisionId: () => 'decision-test-1',
+      );
+      addTearDown(cubit.close);
+
+      await cubit.loadRequests();
+      await cubit.submitDecision(1, ApprovalDecision.approve);
+
+      final state = cubit.state as ApprovalRequestsSuccess;
+      expect(state.operationFor(1), isA<DecisionFailure>());
+    },
+  );
 }

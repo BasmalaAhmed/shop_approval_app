@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shop_approval_app/features/approvals/data/approval_api.dart';
+import 'package:shop_approval_app/features/approvals/data/approval_api_exception.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
 import 'package:shop_approval_app/models/approval_decision.dart';
 import 'package:shop_approval_app/models/approval_decision_command.dart';
@@ -196,6 +197,16 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
             ),
           );
       }
+    } on ApprovalRequestNotFoundException {
+      _setDecisionOperation(
+        requestId,
+        const DecisionFailure('الطلب لم يعد موجودًا'),
+      );
+    } on DecisionIdReusedException {
+      _setDecisionOperation(
+        requestId,
+        const DecisionFailure('تعذر تنفيذ القرار. حاول مرة أخرى'),
+      );
     } on Exception {
       _setDecisionOperation(
         requestId,
@@ -323,6 +334,16 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
             ),
           );
       }
+    } on ApprovalRequestNotFoundException {
+      _setDecisionOperation(
+        requestId,
+        const DecisionFailure('الطلب لم يعد موجودًا'),
+      );
+    } on DecisionIdReusedException {
+      _setDecisionOperation(
+        requestId,
+        const DecisionFailure('تعذر تنفيذ القرار. حاول مرة أخرى'),
+      );
     } on Exception {
       _setDecisionOperation(
         requestId,

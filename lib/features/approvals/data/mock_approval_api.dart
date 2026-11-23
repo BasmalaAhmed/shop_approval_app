@@ -1,4 +1,5 @@
 import 'package:shop_approval_app/features/approvals/data/approval_api.dart';
+import 'package:shop_approval_app/features/approvals/data/approval_api_exception.dart';
 import 'package:shop_approval_app/features/approvals/data/mock_api_scenario.dart';
 import 'package:shop_approval_app/models/approval_decision.dart';
 import 'package:shop_approval_app/models/approval_decision_command.dart';
@@ -51,7 +52,7 @@ class MockApprovalApi implements ApprovalApi {
           previous.command.decision == command.decision;
 
       if (!sameCommand) {
-        throw StateError('decisionId was reused with a different command');
+        throw DecisionIdReusedException(command.decisionId);
       }
 
       return previous.result;
@@ -64,7 +65,7 @@ class MockApprovalApi implements ApprovalApi {
     final currentRequest = _requests[command.requestId];
 
     if (currentRequest == null) {
-      throw StateError('Approval request was not found');
+      throw ApprovalRequestNotFoundException(command.requestId);
     }
 
     final ApprovalDecisionResult result;

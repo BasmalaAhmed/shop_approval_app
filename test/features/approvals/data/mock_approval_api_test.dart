@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shop_approval_app/features/approvals/data/approval_api_exception.dart';
 import 'package:shop_approval_app/features/approvals/data/mock_api_scenario.dart';
 import 'package:shop_approval_app/features/approvals/data/mock_approval_api.dart';
 import 'package:shop_approval_app/models/approval_decision.dart';
@@ -144,4 +145,73 @@ void main() {
       expect(result.request.executedAsEmployee, isNull);
     },
   );
+
+  test('approval stamps decidedAt from the server clock', () async {
+    final request = buildRequest();
+    final api = MockApprovalApi(
+      initialRequests: [request],
+      responseDelay: Duration.zero,
+      now: () => fixedNow,
+    );
+
+    final result = await api.submitDecision(
+      ApprovalDecisionCommand(
+        requestId: request.requestId,
+        decisionId: 'time-test-1',
+        expectedVersion: request.version,
+        decision: ApprovalDecision.approve,
+      ),
+    );
+
+    expect(result.request.requestedAt, request.requestedAt);
+    expect(result.request.decidedAt, fixedNow);
+  });
+
+  test('throws when the request does not exist', () async {
+    final api = MockApprovalApi(
+      initialRequests: [buildRequest()],
+      responseDelay: Duration.zero,
+    );
+
+    await expectLater(
+      api.submitDecision(
+        const ApprovalDecisionCommand(
+          requestId: 99,
+          decisionId: 'missing-1',
+          expectedVersion: 1,
+          decision: ApprovalDecision.approve,
+        ),
+      ),
+      throwsA(isA<ApprovalRequestNotFoundException>()),
+    );
+  });
+
+  test('throws when a decisionId is reused with a different command', () async {
+    final request = buildRequest();
+    final api = MockApprovalApi(
+      initialRequests: [request],
+      responseDelay: Duration.zero,
+    );
+
+    await api.submitDecision(
+      ApprovalDecisionCommand(
+        requestId: request.requestId,
+        decisionId: 'same-id',
+        expectedVersion: request.version,
+        decision: ApprovalDecision.approve,
+      ),
+    );
+
+    await expectLater(
+      api.submitDecision(
+        ApprovalDecisionCommand(
+          requestId: request.requestId,
+          decisionId: 'same-id',
+          expectedVersion: request.version,
+          decision: ApprovalDecision.reject,
+        ),
+      ),
+      throwsA(isA<DecisionIdReusedException>()),
+    );
+  });
 }
