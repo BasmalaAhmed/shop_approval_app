@@ -118,7 +118,7 @@ class _DetailsBottomBarState extends State<DetailsBottomBar> {
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: CustomButton(label: 'موافق', onTap: null)),
+              Expanded(child: CustomButton(label: 'موافقة', onTap: null)),
               const SizedBox(width: 12),
               Expanded(child: OutlineButton.reject(onPressed: null)),
             ],

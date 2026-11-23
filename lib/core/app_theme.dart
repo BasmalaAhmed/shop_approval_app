@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:shop_approval_app/core/app_colors.dart';
 
@@ -16,7 +14,7 @@ class AppTheme {
         primary: AppColors.primaryTeal,
         surface: AppColors.surface,
       ),
-      fontFamily: 'Cairo', // Falls back gracefully to system Arabic font
+      fontFamily: 'Cairo',
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,

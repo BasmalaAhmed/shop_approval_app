@@ -13,7 +13,6 @@ String formatPiastres(int piastres, {String currency = 'ج.م'}) {
   return '$sign$groupedPounds.${remainder.toString().padLeft(2, '0')} $currency';
 }
 
-/// Short, display-only version of a decision id (the full id is what the API uses).
 String shortDecisionId(String decisionId) {
   final short = decisionId.length > 8 ? decisionId.substring(0, 8) : decisionId;
   return 'DEC-${short.toUpperCase()}';
