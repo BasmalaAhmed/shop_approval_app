@@ -1,6 +1,6 @@
 import 'package:shop_approval_app/models/approval_decision.dart';
 
-enum ApprovalStatus { pending, approved, rejected, draft }
+enum ApprovalStatus { pending, approved, rejected }
 
 class ApprovalRequest {
   final int requestId;

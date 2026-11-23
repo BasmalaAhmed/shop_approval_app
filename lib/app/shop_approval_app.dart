@@ -38,7 +38,6 @@ class _ShopApprovalAppState extends State<ShopApprovalApp> {
   late final MockApprovalApi _api = MockApprovalApi(
     initialRequests: createMockApprovalRequests(),
     scenario: _scenarioFromName(_scenarioName),
-    finalRejectionRequestIds: const {4},
   );
 
   @override

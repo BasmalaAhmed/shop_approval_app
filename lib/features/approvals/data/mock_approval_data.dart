@@ -20,7 +20,7 @@ List<ApprovalRequest> createMockApprovalRequests() {
       amountInPiastres: 159806,
       reason: "شراء مستلزمات للمحل",
       version: 1,
-      status: ApprovalStatus.draft,
+      status: ApprovalStatus.rejected,
       lastDecision: ApprovalDecision.reject,
       attentionMessage: 'تعدى المبلغ المحدد لهذا الشهر',
       requestedAt: DateTime(2026, 11, 22, 16, 5),

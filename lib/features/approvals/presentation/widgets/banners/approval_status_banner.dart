@@ -89,7 +89,7 @@ class ApprovalStatusBanner extends StatelessWidget {
     if (request.wasRejected) {
       return InfoBanner(
         title: 'تم رفض الطلب',
-        subtitle: request.status == ApprovalStatus.draft
+        subtitle: request.status == ApprovalStatus.rejected
             ? 'عاد الطلب مسودة عند ${request.employeeName}'
             : 'تم رفض هذا الطلب',
         titleColor: AppColors.textPrimary,

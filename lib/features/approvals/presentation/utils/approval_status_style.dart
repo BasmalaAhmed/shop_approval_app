@@ -60,20 +60,6 @@ class ApprovalStatusStyle {
     icon: Icons.close_rounded,
   );
 
-  static const _rejectedBackToDraft = ApprovalStatusStyle(
-    label: 'مرفوض - عادت لمسودة',
-    background: AppColors.rejectedBg,
-    foreground: AppColors.rejectedText,
-    icon: Icons.close_rounded,
-  );
-
-  static const _draft = ApprovalStatusStyle(
-    label: 'مسودة',
-    background: AppColors.offlineGreyBox,
-    foreground: AppColors.textSecondary,
-    icon: Icons.edit_note_rounded,
-  );
-
   factory ApprovalStatusStyle.resolve(
     ApprovalRequest request,
     DecisionOperationState operation,
@@ -93,8 +79,6 @@ class ApprovalStatusStyle {
         return _approved;
       case ApprovalStatus.rejected:
         return _rejected;
-      case ApprovalStatus.draft:
-        return request.wasRejected ? _rejectedBackToDraft : _draft;
     }
   }
 }

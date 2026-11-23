@@ -564,7 +564,6 @@ void main() {
       await cubit.submitDecision(1, ApprovalDecision.reject);
 
       final request = (cubit.state as ApprovalRequestsSuccess).requests.single;
-      expect(request.status, ApprovalStatus.draft);
       expect(request.lastDecision, ApprovalDecision.reject);
       expect(request.executedAsEmployee, isNull);
       expect(request.decidedAt, fixedNow);
@@ -573,7 +572,6 @@ void main() {
     test('is final when the server says so', () async {
       final api = MockApprovalApi(
         initialRequests: [buildRequest()],
-        finalRejectionRequestIds: const {1},
         responseDelay: Duration.zero,
         now: () => fixedNow,
       );

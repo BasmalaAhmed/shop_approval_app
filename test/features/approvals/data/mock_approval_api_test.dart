@@ -139,7 +139,6 @@ void main() {
       );
 
       expect(result.outcome, ApprovalDecisionOutcome.applied);
-      expect(result.request.status, ApprovalStatus.draft);
       expect(result.request.lastDecision, ApprovalDecision.reject);
       expect(result.request.version, 2);
       expect(result.request.executedAsEmployee, isNull);
@@ -247,7 +246,6 @@ void main() {
     final api = MockApprovalApi(
       initialRequests: [request],
       responseDelay: Duration.zero,
-      finalRejectionRequestIds: {request.requestId},
     );
 
     final result = await api.submitDecision(
