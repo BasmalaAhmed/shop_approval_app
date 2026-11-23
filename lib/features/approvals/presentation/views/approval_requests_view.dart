@@ -29,8 +29,7 @@ class _ApprovalRequestsViewState extends State<ApprovalRequestsView> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            ApprovalRequestDetailsView(requestId: requestId),
+        builder: (_) => ApprovalRequestDetailsView(requestId: requestId),
       ),
     ).then((_) => cubit.stopViewing());
   }
@@ -99,18 +98,30 @@ class _ApprovalRequestsViewState extends State<ApprovalRequestsView> {
               final requests = state.requests;
 
               if (requests.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: Text(
-                      _selectedTabIndex == _pendingTab
-                          ? 'لا توجد طلبات قيد المراجعة'
-                          : 'لا توجد طلبات منتهية',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 14,
+                final isOnline = context.watch<ConnectivityCubit>().state;
+
+                return RefreshIndicator(
+                  onRefresh: () =>
+                      context.read<ApprovalRequestsCubit>().refreshRequests(),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      if (!isOnline) ...[
+                        const OfflineBanner(),
+                        const SizedBox(height: 12),
+                      ],
+                      const SizedBox(height: 40),
+                      const Center(
+                        child: Text(
+                          'لا توجد طلبات',
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 );
               }

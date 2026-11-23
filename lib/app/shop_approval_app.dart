@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,9 +27,6 @@ class _ShopApprovalAppState extends State<ShopApprovalApp> {
     'SCENARIO',
     defaultValue: 'normal',
   );
-  static const bool _simulateExternalChange = bool.fromEnvironment(
-    'EXTERNAL_CHANGE',
-  );
 
   static MockApiScenario _scenarioFromName(String name) {
     return MockApiScenario.values.firstWhere(
@@ -45,25 +40,6 @@ class _ShopApprovalAppState extends State<ShopApprovalApp> {
     scenario: _scenarioFromName(_scenarioName),
     finalRejectionRequestIds: const {4},
   );
-
-  Timer? _demoTimer;
-
-  @override
-  void initState() {
-    super.initState();
-
-    if (_simulateExternalChange) {
-      _demoTimer = Timer(const Duration(seconds: 10), () {
-        _api.simulateExternalChange(4, amountInPiastres: 999900);
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _demoTimer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {

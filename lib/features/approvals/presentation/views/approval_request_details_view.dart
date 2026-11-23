@@ -75,7 +75,11 @@ class ApprovalRequestDetailsView extends StatelessWidget {
             body: Center(child: const Text('الطلب غير موجود')),
           );
         }
-        return const CircularProgressIndicator();
+        return const Scaffold(
+          backgroundColor: AppColors.scaffoldBackground,
+          appBar: DetailsAppBar(),
+          body: Center(child: CircularProgressIndicator()),
+        );
       },
     );
   }

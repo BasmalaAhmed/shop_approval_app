@@ -39,6 +39,8 @@ class ApprovalRequest {
     String? attentionMessage,
     String? executedAsEmployee,
     DateTime? decidedAt,
+    bool clearAttentionMessage = false,
+    bool clearExecutedAsEmployee = false,
   }) {
     return ApprovalRequest(
       requestId: requestId,
@@ -49,8 +51,12 @@ class ApprovalRequest {
       version: version ?? this.version,
       status: status ?? this.status,
       lastDecision: lastDecision ?? this.lastDecision,
-      attentionMessage: attentionMessage ?? this.attentionMessage,
-      executedAsEmployee: executedAsEmployee ?? this.executedAsEmployee,
+      attentionMessage: clearAttentionMessage
+          ? null
+          : (attentionMessage ?? this.attentionMessage),
+      executedAsEmployee: clearExecutedAsEmployee
+          ? null
+          : (executedAsEmployee ?? this.executedAsEmployee),
       requestedAt: requestedAt,
       decidedAt: decidedAt ?? this.decidedAt,
     );
