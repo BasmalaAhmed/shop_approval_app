@@ -119,6 +119,7 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
       );
 
       final merged = <ApprovalRequest>[];
+      final idsToCheck = <int>[];
 
       for (final remote in fetched) {
         final local = localById[remote.requestId];
@@ -130,6 +131,9 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
         } else {
           if (remote.version > local.version) {
             _flagChangeIfViewing(operations, local, remote);
+            if (operations[remote.requestId] is DecisionUnknownOutcome) {
+              idsToCheck.add(remote.requestId);
+            }
           }
           merged.add(remote);
         }
@@ -143,6 +147,10 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
           ),
         ),
       );
+
+      for (final id in idsToCheck) {
+        unawaited(checkDecisionOutcome(id));
+      }
     } on Exception {
       return;
     }

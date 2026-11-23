@@ -412,4 +412,179 @@ void main() {
       expect(state.requests.single.status, ApprovalStatus.pending);
     });
   });
+
+    group('lost responses and retries', () {
+    test('rejects a new decision while the outcome is unknown', () async {
+      final api = MockApprovalApi(
+        initialRequests: [buildRequest()],
+        scenario: MockApiScenario.loseResponseAfterExecution,
+        responseDelay: Duration.zero,
+        now: () => fixedNow,
+      );
+      var generatedIdCount = 0;
+      final cubit = ApprovalRequestsCubit(
+        api,
+        isOnline: () => true,
+        createDecisionId: () => 'decision-${++generatedIdCount}',
+      );
+      addTearDown(cubit.close);
+
+      await cubit.loadRequests();
+      await cubit.submitDecision(1, ApprovalDecision.approve);
+      await cubit.submitDecision(1, ApprovalDecision.reject);
+
+      final state = cubit.state as ApprovalRequestsSuccess;
+      final operation = state.operationFor(1) as DecisionUnknownOutcome;
+      expect(generatedIdCount, 1);
+      expect(operation.command.decision, ApprovalDecision.approve);
+    });
+
+    test('approve and reject tapped together send a single decision', () async {
+      final api = MockApprovalApi(
+        initialRequests: [buildRequest()],
+        responseDelay: const Duration(milliseconds: 10),
+        now: () => fixedNow,
+      );
+      var generatedIdCount = 0;
+      final cubit = ApprovalRequestsCubit(
+        api,
+        isOnline: () => true,
+        createDecisionId: () => 'decision-${++generatedIdCount}',
+      );
+      addTearDown(cubit.close);
+
+      await cubit.loadRequests();
+      await Future.wait([
+        cubit.submitDecision(1, ApprovalDecision.approve),
+        cubit.submitDecision(1, ApprovalDecision.reject),
+      ]);
+
+      final state = cubit.state as ApprovalRequestsSuccess;
+      expect(generatedIdCount, 1);
+      expect(state.requests.single.status, ApprovalStatus.approved);
+      expect(state.requests.single.version, 2);
+    });
+
+    test('checking while offline stays unknown, then confirms once back online',
+        () async {
+      final api = MockApprovalApi(
+        initialRequests: [buildRequest()],
+        scenario: MockApiScenario.loseResponseAfterExecution,
+        responseDelay: Duration.zero,
+        now: () => fixedNow,
+      );
+      var online = true;
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => online);
+      addTearDown(cubit.close);
+
+      await cubit.loadRequests();
+      await cubit.submitDecision(1, ApprovalDecision.approve);
+
+      online = false;
+      await cubit.checkDecisionOutcome(1);
+
+      var state = cubit.state as ApprovalRequestsSuccess;
+      final unknown = state.operationFor(1) as DecisionUnknownOutcome;
+      expect(unknown.message, contains('اتصال'));
+
+      online = true;
+      await cubit.checkDecisionOutcome(1);
+
+      state = cubit.state as ApprovalRequestsSuccess;
+      expect(state.operationFor(1), isA<DecisionConfirmedSuccess>());
+      expect(state.requests.single.version, 2);
+    });
+
+    test('a request that never reached the server is retried with the same id',
+        () async {
+      final api = MockApprovalApi(
+        initialRequests: [buildRequest()],
+        scenario: MockApiScenario.failBeforeExecution,
+        responseDelay: Duration.zero,
+        now: () => fixedNow,
+      );
+      var generatedIdCount = 0;
+      final cubit = ApprovalRequestsCubit(
+        api,
+        isOnline: () => true,
+        createDecisionId: () => 'decision-${++generatedIdCount}',
+      );
+      addTearDown(cubit.close);
+
+      await cubit.loadRequests();
+      await cubit.submitDecision(1, ApprovalDecision.approve);
+      await cubit.checkDecisionOutcome(1);
+
+      var state = cubit.state as ApprovalRequestsSuccess;
+      final unknown = state.operationFor(1) as DecisionUnknownOutcome;
+      expect(unknown.message, contains('لم تظهر'));
+
+      api.scenario = MockApiScenario.normal;
+      await cubit.retryUnknownDecision(1);
+
+      state = cubit.state as ApprovalRequestsSuccess;
+      expect(generatedIdCount, 1);
+      expect(state.operationFor(1), isA<DecisionConfirmedSuccess>());
+      expect(state.requests.single.version, 2);
+    });
+
+    test('a refresh resolves an unknown outcome by asking the server', () async {
+      final api = MockApprovalApi(
+        initialRequests: [buildRequest()],
+        scenario: MockApiScenario.loseResponseAfterExecution,
+        responseDelay: Duration.zero,
+        now: () => fixedNow,
+      );
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => true);
+      addTearDown(cubit.close);
+
+      await cubit.loadRequests();
+      await cubit.submitDecision(1, ApprovalDecision.approve);
+
+      await cubit.refreshRequests();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      final state = cubit.state as ApprovalRequestsSuccess;
+      expect(state.operationFor(1), isA<DecisionConfirmedSuccess>());
+      expect(state.requests.single.status, ApprovalStatus.approved);
+    });
+  });
+
+  group('rejection follows the server answer', () {
+    test('goes back to draft by default', () async {
+      final api = MockApprovalApi(
+        initialRequests: [buildRequest()],
+        responseDelay: Duration.zero,
+        now: () => fixedNow,
+      );
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => true);
+      addTearDown(cubit.close);
+
+      await cubit.loadRequests();
+      await cubit.submitDecision(1, ApprovalDecision.reject);
+
+      final request = (cubit.state as ApprovalRequestsSuccess).requests.single;
+      expect(request.status, ApprovalStatus.draft);
+      expect(request.lastDecision, ApprovalDecision.reject);
+      expect(request.executedAsEmployee, isNull);
+      expect(request.decidedAt, fixedNow);
+    });
+
+    test('is final when the server says so', () async {
+      final api = MockApprovalApi(
+        initialRequests: [buildRequest()],
+        finalRejectionRequestIds: const {1},
+        responseDelay: Duration.zero,
+        now: () => fixedNow,
+      );
+      final cubit = ApprovalRequestsCubit(api, isOnline: () => true);
+      addTearDown(cubit.close);
+
+      await cubit.loadRequests();
+      await cubit.submitDecision(1, ApprovalDecision.reject);
+
+      final request = (cubit.state as ApprovalRequestsSuccess).requests.single;
+      expect(request.status, ApprovalStatus.rejected);
+    });
+  });
 }
