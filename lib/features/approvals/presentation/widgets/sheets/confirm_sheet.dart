@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop_approval_app/core/app_colors.dart';
 import 'package:shop_approval_app/features/approvals/presentation/utils/approval_request_presentation.dart';
+import 'package:shop_approval_app/features/approvals/presentation/widgets/banners/warning_banner.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/buttons/custom_button.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
 
@@ -50,13 +51,16 @@ class _ConfirmSheetState extends State<ConfirmSheet> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 4,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(2),
+          Center(
+            child: Container(
+              width: 44,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
           const SizedBox(height: 18),
@@ -69,59 +73,16 @@ class _ConfirmSheetState extends State<ConfirmSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.warningBg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.warningBorderStrong.withValues(alpha: 0.5),
-                width: 1.2,
-              ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      size: 20,
-                      color: AppColors.warningText,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        attention,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.warningText,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'تأكد من مراجعة التنبيه قبل الموافقة.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
+          WarningBanner(
+            title: attention,
+            subtitle: 'تأكد من مراجعة التنبيه قبل الموافقة.',
           ),
           const SizedBox(height: 16),
           GestureDetector(
             onTap: () => setState(() => _reviewedWarning = !_reviewedWarning),
             behavior: HitTestBehavior.opaque,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Checkbox(
                   value: _reviewedWarning,
@@ -147,6 +108,9 @@ class _ConfirmSheetState extends State<ConfirmSheet> {
           CustomButton(
             label: 'تأكيد الموافقة',
             icon: Icons.check_rounded,
+            bgColor: _reviewedWarning
+                ? AppColors.primaryTeal
+                : Color(0XFF8C95A3),
             onTap: _reviewedWarning
                 ? () {
                     Navigator.pop(context);
@@ -155,14 +119,16 @@ class _ConfirmSheetState extends State<ConfirmSheet> {
                 : null,
           ),
           const SizedBox(height: 10),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'إلغاء',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primaryTeal,
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'إلغاء',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryTeal,
+                ),
               ),
             ),
           ),

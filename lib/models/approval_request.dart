@@ -33,6 +33,7 @@ class ApprovalRequest {
 
   ApprovalRequest copyWith({
     int? version,
+    int? amountInPiastres,
     ApprovalStatus? status,
     ApprovalDecision? lastDecision,
     String? attentionMessage,
@@ -43,7 +44,7 @@ class ApprovalRequest {
       requestId: requestId,
       employeeName: employeeName,
       branchName: branchName,
-      amountInPiastres: amountInPiastres,
+      amountInPiastres: amountInPiastres ?? this.amountInPiastres,
       reason: reason,
       version: version ?? this.version,
       status: status ?? this.status,

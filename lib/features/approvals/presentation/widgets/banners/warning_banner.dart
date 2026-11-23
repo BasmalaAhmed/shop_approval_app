@@ -34,16 +34,19 @@ class WarningBanner extends StatelessWidget {
                 width: 1.2,
               ),
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Icon(
+            Icons.warning_amber_rounded,
+            size: compact ? 18 : 20,
+            color: AppColors.warningText,
+          ),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                size: compact ? 18 : 20,
-                color: AppColors.warningText,
-              ),
-              const SizedBox(width: 8),
               Flexible(
                 child: Text(
                   title,
@@ -54,18 +57,18 @@ class WarningBanner extends StatelessWidget {
                   ),
                 ),
               ),
+              if (!compact && subtitleText != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  subtitleText,
+                  textAlign: TextAlign.center,
+                  style: AppStyles.bannerSubtitle.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ],
           ),
-          if (!compact && subtitleText != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitleText,
-              textAlign: TextAlign.center,
-              style: AppStyles.bannerSubtitle.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
         ],
       ),
     );

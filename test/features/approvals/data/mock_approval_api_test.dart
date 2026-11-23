@@ -214,4 +214,51 @@ void main() {
       throwsA(isA<DecisionIdReusedException>()),
     );
   });
+
+  test(
+    'external change keeps the request pending and bumps the version',
+    () async {
+      final request = buildRequest();
+      final api = MockApprovalApi(
+        initialRequests: [request],
+        responseDelay: Duration.zero,
+      );
+
+      api.simulateExternalChange(request.requestId, amountInPiastres: 999900);
+
+      final result = await api.submitDecision(
+        ApprovalDecisionCommand(
+          requestId: request.requestId,
+          decisionId: 'stale-1',
+          expectedVersion: request.version,
+          decision: ApprovalDecision.approve,
+        ),
+      );
+
+      expect(result.outcome, ApprovalDecisionOutcome.versionConflict);
+      expect(result.request.status, ApprovalStatus.pending);
+      expect(result.request.version, 2);
+      expect(result.request.amountInPiastres, 999900);
+    },
+  );
+
+  test('server can answer a rejection with a final rejected status', () async {
+    final request = buildRequest();
+    final api = MockApprovalApi(
+      initialRequests: [request],
+      responseDelay: Duration.zero,
+      finalRejectionRequestIds: {request.requestId},
+    );
+
+    final result = await api.submitDecision(
+      ApprovalDecisionCommand(
+        requestId: request.requestId,
+        decisionId: 'reject-final-1',
+        expectedVersion: request.version,
+        decision: ApprovalDecision.reject,
+      ),
+    );
+
+    expect(result.request.status, ApprovalStatus.rejected);
+  });
 }
