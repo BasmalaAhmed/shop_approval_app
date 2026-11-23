@@ -25,7 +25,6 @@ class ApprovalDetailRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: noteColor ?? Colors.black,
               ),
             ),
           ),
