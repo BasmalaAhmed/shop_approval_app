@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shop_approval_app/core/app_colors.dart';
 import 'package:shop_approval_app/core/app_styles.dart';
+import 'package:shop_approval_app/core/connectivity/connectivity_cubit.dart';
 import 'package:shop_approval_app/core/formatters.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_cubit.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
@@ -132,12 +133,14 @@ class _DetailsBottomBarState extends State<DetailsBottomBar> {
         ],
       );
     }
-
+    final isOnline = context.watch<ConnectivityCubit>().state;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'عند الموافقة تُنَفَّذ العملية باسم ${widget.request.employeeName}',
+          isOnline
+              ? 'عند الموافقة تُنَفَّذ العملية باسم ${widget.request.employeeName}'
+              : 'لا يمكن اتخاذ قرار حتى يعود الاتصال',
           style: AppStyles.disclaimerText,
           textAlign: TextAlign.center,
         ),
@@ -148,11 +151,16 @@ class _DetailsBottomBarState extends State<DetailsBottomBar> {
               child: CustomButton(
                 label: 'موافقة',
                 icon: Icons.check_rounded,
-                onTap: () => _onApprove(),
+                bgColor: isOnline ? AppColors.primaryTeal : Color(0XFF8C95A3),
+                onTap: isOnline ? _onApprove : null,
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: OutlineButton.reject(onPressed: _onReject)),
+            Expanded(
+              child: OutlineButton.reject(
+                onPressed: isOnline ? _onReject : null,
+              ),
+            ),
           ],
         ),
       ],

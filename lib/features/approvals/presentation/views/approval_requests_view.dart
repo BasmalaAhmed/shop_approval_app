@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shop_approval_app/core/app_colors.dart';
 import 'package:shop_approval_app/core/app_styles.dart';
+import 'package:shop_approval_app/core/connectivity/connectivity_cubit.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_cubit.dart';
 import 'package:shop_approval_app/features/approvals/presentation/manager/approval_requests_cubit/approval_requests_state.dart';
 import 'package:shop_approval_app/features/approvals/presentation/utils/approval_request_presentation.dart';
 import 'package:shop_approval_app/features/approvals/presentation/views/approval_request_details_view.dart';
+import 'package:shop_approval_app/features/approvals/presentation/widgets/banners/offline_banner.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/buttons/custom_button.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/cards/approval_request_card.dart';
 import 'package:shop_approval_app/features/approvals/presentation/widgets/tab_bar_widget.dart';
@@ -116,38 +118,48 @@ class _ApprovalRequestsViewState extends State<ApprovalRequestsView> {
                   ),
                 );
               }
-
+              final isOnline = context.watch<ConnectivityCubit>().state;
               return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                padding: EdgeInsets.fromLTRB( 0, isOnline ? 16 : 0, 0, 24),
                 children: [
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'طلبات الموافقة',
-                          style: AppStyles.screenHeader,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _pendingSubtitle(pending.length),
-                          style: AppStyles.screenSubheader,
-                        ),
-                      ],
+                  if (!isOnline) ...[
+                    const OfflineBanner(),
+                    const SizedBox(height: 12),
+                  ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'طلبات الموافقة',
+                            style: AppStyles.screenHeader,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _pendingSubtitle(pending.length),
+                            style: AppStyles.screenSubheader,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
-                  TabBarWidget(
-                    selectedIndex: _selectedTabIndex,
-                    onTabSelected: (index) =>
-                        setState(() => _selectedTabIndex = index),
-                    pendingCount: pending.length,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TabBarWidget(
+                      selectedIndex: _selectedTabIndex,
+                      onTabSelected: (index) =>
+                          setState(() => _selectedTabIndex = index),
+                      pendingCount: pending.length,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   if (visible.isEmpty)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      padding: const EdgeInsets.symmetric(vertical: 40 , horizontal: 16),
                       child: Center(
                         child: Text(
                           _selectedTabIndex == _pendingTab
@@ -162,10 +174,13 @@ class _ApprovalRequestsViewState extends State<ApprovalRequestsView> {
                     )
                   else
                     for (final request in visible)
-                      ApprovalRequestCard(
-                        request: request,
-                        operation: state.operationFor(request.requestId),
-                        onTap: () => _openDetails(request.requestId),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: ApprovalRequestCard(
+                          request: request,
+                          operation: state.operationFor(request.requestId),
+                          onTap: () => _openDetails(request.requestId),
+                        ),
                       ),
                 ],
               );

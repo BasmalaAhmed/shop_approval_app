@@ -15,6 +15,7 @@ class DetailsAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.white,
       centerTitle: false,
+      titleSpacing: 0,
       shape: Border(bottom: BorderSide(color: Color(0XFFE4E7EC))),
       title: Column(
         mainAxisSize: MainAxisSize.min,
