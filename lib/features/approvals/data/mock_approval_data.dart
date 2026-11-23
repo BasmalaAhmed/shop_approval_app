@@ -11,6 +11,7 @@ List<ApprovalRequest> createMockApprovalRequests() {
       reason: "شراء مستلزمات للمحل",
       version: 1,
       status: ApprovalStatus.pending,
+      requestedAt: DateTime(2026, 11, 23, 9, 30),
     ),
     ApprovalRequest(
       requestId: 2,
@@ -22,6 +23,8 @@ List<ApprovalRequest> createMockApprovalRequests() {
       status: ApprovalStatus.draft,
       lastDecision: ApprovalDecision.reject,
       attentionMessage: 'لا يمكن الموافقة',
+      requestedAt: DateTime(2026, 11, 22, 16, 5),
+      decidedAt: DateTime(2026, 11, 22, 17, 40),
     ),
   ];
 }

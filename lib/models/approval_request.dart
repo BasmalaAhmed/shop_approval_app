@@ -13,6 +13,8 @@ class ApprovalRequest {
   final ApprovalDecision? lastDecision;
   final String? attentionMessage;
   final String? executedAsEmployee;
+  final DateTime requestedAt;
+  final DateTime? decidedAt;
 
   ApprovalRequest({
     required this.requestId,
@@ -25,6 +27,8 @@ class ApprovalRequest {
     this.lastDecision,
     this.attentionMessage,
     this.executedAsEmployee,
+    required this.requestedAt,
+    this.decidedAt,
   });
 
   ApprovalRequest copyWith({
@@ -33,6 +37,7 @@ class ApprovalRequest {
     ApprovalDecision? lastDecision,
     String? attentionMessage,
     String? executedAsEmployee,
+    DateTime? decidedAt,
   }) {
     return ApprovalRequest(
       requestId: requestId,
@@ -45,6 +50,8 @@ class ApprovalRequest {
       lastDecision: lastDecision ?? this.lastDecision,
       attentionMessage: attentionMessage ?? this.attentionMessage,
       executedAsEmployee: executedAsEmployee ?? this.executedAsEmployee,
+      requestedAt: requestedAt,
+      decidedAt: decidedAt ?? this.decidedAt,
     );
   }
 }

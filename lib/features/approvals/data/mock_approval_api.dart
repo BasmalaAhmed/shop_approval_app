@@ -10,7 +10,9 @@ class MockApprovalApi implements ApprovalApi {
     required List<ApprovalRequest> initialRequests,
     this.scenario = MockApiScenario.normal,
     this.responseDelay = const Duration(milliseconds: 300),
-  }) : _requests = {
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now,
+       _requests = {
          for (final request in initialRequests) request.requestId: request,
        };
 
@@ -18,6 +20,7 @@ class MockApprovalApi implements ApprovalApi {
   final Duration responseDelay;
   final Map<int, ApprovalRequest> _requests;
   final Map<String, _ProcessedDecision> _processedDecisions = {};
+  final DateTime Function() _now;
 
   @override
   Future<List<ApprovalRequest>> fetchRequests() async {
@@ -79,6 +82,7 @@ class MockApprovalApi implements ApprovalApi {
             ? ApprovalStatus.approved
             : ApprovalStatus.draft,
         lastDecision: command.decision,
+        decidedAt: _now(),
         executedAsEmployee: command.decision == ApprovalDecision.approve
             ? currentRequest.employeeName
             : null,

@@ -6,23 +6,17 @@ import 'package:shop_approval_app/features/approvals/presentation/manager/approv
 import 'package:shop_approval_app/models/approval_decision.dart';
 import 'package:shop_approval_app/models/approval_decision_command.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
+import '../../../helpers/approval_test_data.dart';
 
 void main() {
   test('retrieves approve result after response lost', () async {
-    final request = ApprovalRequest(
-      requestId: 1,
-      employeeName: 'أحمد محمود',
-      branchName: 'مدينة نصر',
-      amountInPiastres: 156123,
-      reason: 'شراء مستلزمات للمحل',
-      version: 1,
-      status: ApprovalStatus.pending,
-    );
+    final request = buildRequest();
 
     final api = MockApprovalApi(
       initialRequests: [request],
       scenario: MockApiScenario.loseResponseAfterExecution,
       responseDelay: Duration.zero,
+      now: () => fixedNow,
     );
 
     final cubit = ApprovalRequestsCubit(
@@ -73,20 +67,13 @@ void main() {
   });
 
   test('retries unknown decision with the same decision ID', () async {
-    final request = ApprovalRequest(
-      requestId: 1,
-      employeeName: 'أحمد محمود',
-      branchName: 'مدينة نصر',
-      amountInPiastres: 156123,
-      reason: 'شراء مستلزمات للمحل',
-      version: 1,
-      status: ApprovalStatus.pending,
-    );
+    final request = buildRequest();
 
     final api = MockApprovalApi(
       initialRequests: [request],
       scenario: MockApiScenario.loseResponseAfterExecution,
       responseDelay: Duration.zero,
+      now: () => fixedNow,
     );
 
     var generatedIdCount = 0;
@@ -128,19 +115,12 @@ void main() {
   test(
     'ignores duplicate submissions while a decision is submitting',
     () async {
-      final request = ApprovalRequest(
-        requestId: 1,
-        employeeName: 'أحمد محمود',
-        branchName: 'مدينة نصر',
-        amountInPiastres: 156123,
-        reason: 'شراء مستلزمات للمحل',
-        version: 1,
-        status: ApprovalStatus.pending,
-      );
+      final request = buildRequest();
 
       final api = MockApprovalApi(
         initialRequests: [request],
         responseDelay: const Duration(milliseconds: 10),
+        now: () => fixedNow,
       );
 
       var generatedIdCount = 0;
@@ -176,20 +156,13 @@ void main() {
   );
 
   test('does not submit a new decision while offline', () async {
-    final request = ApprovalRequest(
-      requestId: 1,
-      employeeName: 'أحمد محمود',
-      branchName: 'مدينة نصر',
-      amountInPiastres: 156123,
-      reason: 'شراء مستلزمات للمحل',
-      version: 1,
-      status: ApprovalStatus.pending,
-    );
+    final request = buildRequest();
 
     final api = MockApprovalApi(
       initialRequests: [request],
       scenario: MockApiScenario.failBeforeExecution,
       responseDelay: Duration.zero,
+      now: () => fixedNow,
     );
 
     var generatedIdCount = 0;
@@ -218,19 +191,12 @@ void main() {
   });
 
   test('updates the request when another device decided first', () async {
-    final request = ApprovalRequest(
-      requestId: 1,
-      employeeName: 'أحمد محمود',
-      branchName: 'مدينة نصر',
-      amountInPiastres: 156123,
-      reason: 'شراء مستلزمات للمحل',
-      version: 1,
-      status: ApprovalStatus.pending,
-    );
+    final request = buildRequest();
 
     final api = MockApprovalApi(
       initialRequests: [request],
       responseDelay: Duration.zero,
+      now: () => fixedNow,
     );
 
     final cubit = ApprovalRequestsCubit(

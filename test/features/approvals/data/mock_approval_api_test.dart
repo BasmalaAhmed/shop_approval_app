@@ -5,23 +5,17 @@ import 'package:shop_approval_app/models/approval_decision.dart';
 import 'package:shop_approval_app/models/approval_decision_command.dart';
 import 'package:shop_approval_app/models/approval_decision_result.dart';
 import 'package:shop_approval_app/models/approval_request.dart';
+import '../../../helpers/approval_test_data.dart';
 
 void main() {
   test('Response lost after execution', () async {
-    final request = ApprovalRequest(
-      requestId: 1,
-      employeeName: 'احمد محمود',
-      branchName: 'مدينة نصر',
-      amountInPiastres: 156123,
-      reason: 'شراء مستلزمات للمحل',
-      version: 1,
-      status: ApprovalStatus.pending,
-    );
+    final request = buildRequest();
 
     final sendRequest = MockApprovalApi(
       initialRequests: [request],
       scenario: MockApiScenario.loseResponseAfterExecution,
       responseDelay: Duration.zero,
+      now: () => fixedNow,
     );
 
     final command = ApprovalDecisionCommand(
@@ -56,19 +50,12 @@ void main() {
   });
 
   test('two different decision from different devices', () async {
-    final request = ApprovalRequest(
-      requestId: 1,
-      employeeName: 'احمد محمود',
-      branchName: 'مدينة نصر',
-      amountInPiastres: 156123,
-      reason: 'شراء مستلزمات للمحل',
-      version: 1,
-      status: ApprovalStatus.pending,
-    );
+    final request = buildRequest();
 
     final sendRequest = MockApprovalApi(
       initialRequests: [request],
       responseDelay: Duration.zero,
+      now: () => fixedNow,
     );
 
     final firstCommand = ApprovalDecisionCommand(
@@ -95,20 +82,13 @@ void main() {
   });
 
   test('Network failure before execution', () async {
-    final request = ApprovalRequest(
-      requestId: 1,
-      employeeName: 'احمد محمود',
-      branchName: 'مدينة نصر',
-      amountInPiastres: 156123,
-      reason: 'شراء مستلزمات للمحل',
-      version: 1,
-      status: ApprovalStatus.pending,
-    );
+    final request = buildRequest();
 
     final sendRequest = MockApprovalApi(
       initialRequests: [request],
       scenario: MockApiScenario.failBeforeExecution,
       responseDelay: Duration.zero,
+      now: () => fixedNow,
     );
 
     final command = ApprovalDecisionCommand(
@@ -140,19 +120,12 @@ void main() {
   test(
     'rejection returns request to draft without execution employee',
     () async {
-      final request = ApprovalRequest(
-        requestId: 1,
-        employeeName: 'أحمد محمود',
-        branchName: 'مدينة نصر',
-        amountInPiastres: 156123,
-        reason: 'شراء مستلزمات للمحل',
-        version: 1,
-        status: ApprovalStatus.pending,
-      );
+      final request = buildRequest();
 
       final api = MockApprovalApi(
         initialRequests: [request],
         responseDelay: Duration.zero,
+        now: () => fixedNow,
       );
 
       final result = await api.submitDecision(
