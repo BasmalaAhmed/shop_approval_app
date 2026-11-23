@@ -68,6 +68,44 @@ class ApprovalRequestsCubit extends Cubit<ApprovalRequestsState> {
     }
   }
 
+  Future<void> refreshRequests() async {
+    if (state is! ApprovalRequestsSuccess || !_isOnline()) {
+      return;
+    }
+
+    try {
+      final fetched = await api.fetchRequests();
+
+      final currentState = state;
+
+      if (currentState is! ApprovalRequestsSuccess) {
+        return;
+      }
+
+      final localById = {
+        for (final request in currentState.requests) request.requestId: request,
+      };
+
+      final merged = fetched
+          .map((remote) {
+            final local = localById[remote.requestId];
+
+            return local != null && local.version > remote.version
+                ? local
+                : remote;
+          })
+          .toList(growable: false);
+
+      emit(
+        currentState.copyWith(
+          requests: List<ApprovalRequest>.unmodifiable(merged),
+        ),
+      );
+    } on Exception {
+      return;
+    }
+  }
+
   void _setDecisionOperation(int requestId, DecisionOperationState operation) {
     final currentState = state;
 
